@@ -3,7 +3,7 @@ FROM python:3.11.10
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y \
-    libportaudio2 \
+    portaudio19-dev \
     libasound2-dev \
     gcc \
     python3-dev \
