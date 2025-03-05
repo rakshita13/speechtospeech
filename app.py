@@ -16,11 +16,11 @@ import time
 os.environ["OPENAI_API_KEY"] = "sk-ds-team-general-uRHEpM4v8JyZPznqvmSMT3BlbkFJPIMx3gi9v6BQOn58RbSN"
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-st.set_page_config(page_title="HR Voice Assistant", page_icon="🎤", layout="wide")
+st.set_page_config(page_title="Voice Assistant", page_icon="🎤", layout="wide")
 
 @st.cache_resource
 def load_vectorstore(file_path):
-    loader = TextLoader(file_path)
+    loader = TextLoader(file_path, encoding='utf-8')
     documents = loader.load()
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
     chunks = text_splitter.split_documents(documents)
@@ -59,14 +59,14 @@ def transcribe_audio(audio_path):
 
 def generate_response(query):
     if "vectorstore" not in st.session_state:
-        return "Please upload an HR policy document first."
+        return "Please upload document first."
     
-    template = """Answer strictly based on the provided HR policy document:
+    template = """Answer strictly based on the provided document:
     {context}
     
     Question: {question}
-    
-    If the answer isn't found in the document, respond: "This information isn't available in our policies. Please contact HR directly."
+
+    If the answer isn't found in the document, respond: "This information isn't available in my knowledge. Please contact the concerned."
     """
     
     prompt = PromptTemplate(template=template, input_variables=["context", "question"])
@@ -84,7 +84,7 @@ def generate_response(query):
     status_message.empty()
     
     almost_there_message = st.info("✅ Almost there...")
-    time.sleep(1.5)  # Simulate slight delay before response
+    time.sleep(1.5)  
     almost_there_message.empty()
     
     return response
@@ -101,23 +101,24 @@ def text_to_speech(text):
 
 def main():
     with st.sidebar:
-        st.header("HR Policy Document")
-        uploaded_file = st.file_uploader("Upload your HR policy document (TXT)", type=["txt"])
+        st.header("Document")
+        uploaded_file = st.file_uploader("Upload your document (TXT)", type=["txt"])
         
         if uploaded_file is not None and "vectorstore" not in st.session_state:
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".txt") as tmp_file:
-                tmp_file.write(uploaded_file.getvalue())
-                tmp_path = tmp_file.name
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".txt", mode='w', encoding='utf-8') as tmp_file:
+                content = uploaded_file.getvalue().decode('utf-8')
+                tmp_file.write(content)
+            tmp_path = tmp_file.name
             
             st.session_state.vectorstore = load_vectorstore(tmp_path)
             st.success("Document processed successfully!")
         elif "vectorstore" in st.session_state:
-            st.info("HR policy document is loaded.")
+            st.info("Document is loaded.")
 
-    st.title("HR Voice Assistant 🎤")
+    st.title("Voice Assistant 🎤")
     
     if "messages" not in st.session_state:
-        st.session_state.messages = [{"role": "assistant", "content": "Hello! Upload a document and ask me anything about HR policies!"}]
+        st.session_state.messages = [{"role": "assistant", "content": "Hello! Upload a document and ask me anything about it!"}]
     
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
